@@ -1,0 +1,18 @@
+<project name="Lab01" default="compile" basedir=".">
+	<target name="init">
+		<mkdir dir="classes"/>
+	</target> 
+	<target name="clean">
+		<delete>
+			<fileset dir="classes"/>
+		</delete>
+	</target>
+	<target name="compile" depends="init">
+		<javac debug="on" srcdir="src" destdir="classes" fork="true">
+			
+		</javac>
+	</target>
+	<target name="run" depends="compile">
+		<java dir="classes" classname="World.HelloWorld" fork="true" />
+	</target>
+</project>	
