@@ -1,0 +1,16 @@
+<project name="LAB02" default="compile" basedir=".">
+	<target name="init">
+		<mkdir dir="classes"/>
+	</target>
+	<target name="clean">
+		<delete>
+			<fileset dir="classes"/>
+		</delete>
+	</target>
+	<target name="compile" depends="init">
+		<javac includeantruntime="false" debug="on" srcdir="src" destdir="classes"/>
+	</target>
+	<target name="run" depends="compile">
+		<java classpath="classes" classname="Shell"/>
+	</target>
+</project>

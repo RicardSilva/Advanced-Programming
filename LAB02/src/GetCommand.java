@@ -1,12 +1,10 @@
-
-public class GetCommand extends Command {
+public class GetCommand implements Command {
 
 	private String name;
 	public GetCommand(String arg1) {
 		name = arg1;
 	}
 
-	@Override
 	public Object execute() {
 		// TODO Auto-generated method stub
 		return null;
