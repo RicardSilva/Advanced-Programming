@@ -24,31 +24,39 @@ public class KeyConstructors {
 			ClassPool pool = ClassPool.getDefault();
 			CtClass ctClass = pool.get("Widget");
 			
-			for (CtMethod ctMethod : ctClass.getDeclaredMethods()) {
-				Object[] annotations = ctMethod.getAnnotations();
+			for (CtConstructor ctConst : ctClass.getDeclaredConstructors()) {
+				Object[] annotations = ctConst.getAnnotations();
 				if ((annotations.length == 1) && (annotations[0] instanceof KeywordArgs)) {
-					System.out.println("ANNOTATION!");
+					modifyConstructor(ctClass, ctConst, annotations);
 				}
 			}
 		} catch (Exception ex) {
 			System.out.println("ERROR: " + ex.getClass());
 		}
 	}
+	
+	public void modifyConstructor(CtClass ctClass, CtConstructor ctConst, Object[] annotations){
+		System.out.println("TO DO");
+	}
 
 	public static void main(String[] args) throws Exception {
-		// TO DO: read test from args
-		
-		Scanner console = new Scanner(System.in);
-		String[] commands = console.nextLine().split(" ");
+		String className;
 		
 		KeyConstructors keyC = new KeyConstructors();
 		keyC.buildWidget();
 		
-		Class testClass = Class.forName(commands[0]);
+		// Prompt for test name if none is given as argument
+		if (args.length > 0) {
+			className = args[0];
+		} else {
+			Scanner scanner = new Scanner(System.in);
+			className = scanner.nextLine().split(" ")[0];
+			scanner.close();
+		}
+
+		Class testClass = Class.forName(className);
 		Method main = testClass.getMethod("main", String[].class);
 
 		main.invoke(null, (Object[]) new String[1]);
-		
-		console.close();
 	}
 }

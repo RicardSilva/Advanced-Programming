@@ -20,6 +20,10 @@
     	</javac>
 	</target>
 	<target name="run" depends="compile">
-		<java classpath="classes" classname="ist.meic.pa.KeyConstructors"/>
+		<java classpath="classes" classname="ist.meic.pa.KeyConstructors">
+			<classpath>
+        		<pathelement path="lib/javassist.jar"/>
+    		</classpath>
+    	</java>
 	</target>
 </project>
