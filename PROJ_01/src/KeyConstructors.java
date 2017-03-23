@@ -1,6 +1,6 @@
 package ist.meic.pa;
 
-import javaassist.*;
+import javassist.*;
 import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,8 +14,8 @@ public class KeyConstructors {
 	}
 
 	public void buildConstructors() {
-		ClassPool pool = ClassPool.getDefault();
-		//for(CtClass ctClass : pool.get("Widget");
+		// ClassPool pool = ClassPool.getDefault();
+		// for(CtClass ctClass : pool.get("Widget"));
 	}
 
 
@@ -31,8 +31,8 @@ public class KeyConstructors {
 		keyC.buildConstructors();
 		
 		Class testClass = Class.forName(commands[0]);
-		Method main = testClass.getMethod("main", String[].class);		
-		Constructor[] constructors = testClass.getDeclaredConstructors();		
+		Method main = testClass.getMethod("main", String[].class);
+
 		main.invoke(null, new String[1]);
 		
 		console.close();
