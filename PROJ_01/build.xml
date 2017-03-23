@@ -8,8 +8,16 @@
 		</delete>
 	</target>
 	<target name="compile" depends="init">
-		<javac includeantruntime="false" debug="on" srcdir="src" destdir="classes"/>
-		<javac includeantruntime="false" debug="on" srcdir="tests" destdir="classes"/>
+		<javac includeantruntime="false" debug="on" srcdir="src" destdir="classes">
+			<classpath>
+        		<pathelement path="lib/javassist.jar"/>
+    		</classpath>
+		</javac>
+		<javac includeantruntime="false" debug="on" srcdir="tests" destdir="classes">
+			<classpath>
+        		<pathelement path="lib/javassist.jar"/>
+    		</classpath>
+    	</javac>
 	</target>
 	<target name="run" depends="compile">
 		<java classpath="classes" classname="ist.meic.pa.KeyConstructors"/>
