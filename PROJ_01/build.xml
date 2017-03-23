@@ -1,4 +1,4 @@
-<project name="PROJ_01" default="run" basedir=".">
+<project name="PROJ_01" default="compile" basedir=".">
 	<target name="init">
 		<mkdir dir="classes"/>
 	</target>
@@ -8,10 +8,22 @@
 		</delete>
 	</target>
 	<target name="compile" depends="init">
-		<javac includeantruntime="false" debug="on" srcdir="src" destdir="classes"/>
-		<javac includeantruntime="false" debug="on" srcdir="tests" destdir="classes"/>
+		<javac fork="true" includeantruntime="false" debug="on" srcdir="src" destdir="classes">
+			<classpath>
+        		<pathelement path="lib/javassist.jar"/>
+    		</classpath>
+		</javac>
+		<javac fork="true" includeantruntime="false" debug="on" srcdir="tests" destdir="classes">
+			<classpath>
+        		<pathelement path="lib/javassist.jar"/>
+    		</classpath>
+    	</javac>
 	</target>
 	<target name="run" depends="compile">
-		<java classpath="classes" classname="ist.meic.pa.KeyConstructors"/>
+		<java classpath="classes" classname="ist.meic.pa.KeyConstructors">
+			<classpath>
+        		<pathelement path="lib/javassist.jar"/>
+    		</classpath>
+		</java>
 	</target>
 </project>

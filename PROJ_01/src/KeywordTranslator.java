@@ -1,4 +1,6 @@
-import javassist.translator;
+package ist.meic.pa;
+
+import javassist.*;
 
 public class KeywordTranslator implements Translator{
 	
@@ -6,14 +8,21 @@ public class KeywordTranslator implements Translator{
 	
 	}
 	
+	private bool isKeyword(CtConstructor constructor)
+	{
+	}
+	
 	public void onLoad(ClassPool pool, String className) throws NotFoundException, CannotCompileException {
 		System.out.println("CLASS LOADED:" + className);
-		
-		// CtClass ctClass = pool.get(className);
-		// try {
-		// 	memoizeMethods(ctClass);
-		// } catch (ClassNotFoundException e) {
-		// 	throw new RuntimeException(e);
-		// }
+		//Find the keword constructor
+		CtClass loadedClass = pool.getCtClass(className);
+		CtConstructor[] constructors = loadedClass.getConstructors();
+		for(CtConstructor constructor : constructors){
+            if(isKeyword(constructor)
+            {
+                System.out.println("Class " + className + " has constructor: " + constructor.toString());
+            }
+            
+		}
 	}
 }
