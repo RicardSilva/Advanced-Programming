@@ -15,7 +15,7 @@ public class KeyConstructors {
 
 	public void buildConstructors() {
 		ClassPool pool = ClassPool.getDefault();
-		for(CtClass ctClass : pool.get("Widget");
+		//for(CtClass ctClass : pool.get("Widget");
 	}
 
 
@@ -30,7 +30,10 @@ public class KeyConstructors {
 		KeyConstructors keyC = new KeyConstructors();
 		keyC.buildConstructors();
 		
-		Class testClass = Class.forName(commands[0]);		Method main = testClass.getMethod("main", String[].class);		Constructor[] constructors = testClass.getDeclaredConstructors();		System.out		main.invoke(null, new String[1]);
+		Class testClass = Class.forName(commands[0]);
+		Method main = testClass.getMethod("main", String[].class);		
+		Constructor[] constructors = testClass.getDeclaredConstructors();		
+		main.invoke(null, new String[1]);
 		
 		console.close();
 	}
