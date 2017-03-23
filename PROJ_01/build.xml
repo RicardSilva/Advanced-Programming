@@ -1,0 +1,17 @@
+<project name="PROJ_01" default="run" basedir=".">
+	<target name="init">
+		<mkdir dir="classes"/>
+	</target>
+	<target name="clean">
+		<delete>
+			<fileset dir="classes"/>
+		</delete>
+	</target>
+	<target name="compile" depends="init">
+		<javac includeantruntime="false" debug="on" srcdir="src" destdir="classes"/>
+		<javac includeantruntime="false" debug="on" srcdir="tests" destdir="classes"/>
+	</target>
+	<target name="run" depends="compile">
+		<java classpath="classes" classname="ist.meic.pa.KeyConstructors"/>
+	</target>
+</project>
