@@ -1,4 +1,4 @@
-<project name="LAB02" default="compile" basedir=".">
+<project name="LAB02" default="run" basedir=".">
 	<target name="init">
 		<mkdir dir="classes"/>
 	</target>

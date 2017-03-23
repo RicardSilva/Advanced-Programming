@@ -9,7 +9,7 @@ public class ExitCommand implements Command {
 	}
 
 	public Object execute() {
-		System.out.println("Exiting...");
-		return null;
+		System.out.println("Goodbye!");
+		return this;
 	}
 }

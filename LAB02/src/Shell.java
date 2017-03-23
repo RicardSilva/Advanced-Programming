@@ -1,50 +1,79 @@
+import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Shell {
 	private Scanner scanner = new Scanner(System.in);
 	
 	public static void main(String[] args) {
-		Command command;
-		Object result;
+		//Map<String, Object> variables = new HashMap<String, Object>();
+		Object lastResult = null;
+		Object newResult = null;
 		
 		Shell shell = new Shell();
 		
 		do {
-			command = shell.getCommand();
-			if (command != null) {
-				result = command.execute();
+			if (newResult != null) {
+				printObject(newResult);
+				lastResult = newResult;
 			}
-		} while (command == null || command.getClass() != ExitCommand.class);
+			newResult = shell.runCommand(lastResult);
+		} while (newResult == null || newResult.getClass() != ExitCommand.class);
 	}
 	
-	public Command getCommand() {
+	public static void printObject(Object obj) {
+		if (obj instanceof Object[]) {
+			int i = 0;
+			for (Object o : (Object []) obj) {
+				System.out.println("[" + i++ + "] " + o);
+			}
+		} else {
+			System.out.println(obj);
+		}
+	}
+	
+	public Object runCommand(Object lastResult) {
 		Command commandObj;
+		Constructor cons;
 		
 		System.out.println("Input command:");
 		String[] input = scanner.nextLine().split(" ");
-		if (input[0] == null) {
+		if (input[0].isEmpty()) {
+			printObject(lastResult); // print current object
 			return null;
 		}
+		
+		
+		//String[] args = input[1].split(" ");
 	
-		//Create instance of the selected command
+		// Create instance of the selected command
 		try {
 			Class commandClass = Class.forName(input[0] + "Command");
 			
 			if(input.length == 1) {
-				commandObj = (Command) commandClass.newInstance();
+				cons = commandClass.getConstructor();
+				commandObj = (Command) cons.newInstance();
 			} else {
-				Constructor cons = commandClass.getConstructor(String.class);
+				cons = commandClass.getConstructor(String.class);
 				commandObj = (Command) cons.newInstance(input[1]);
 			}
-			return commandObj;
+			return commandObj.execute();
 		}
 		catch (ClassNotFoundException ex) {
-			return new UnknownCommand(); // HERE
-		}
-		catch (Exception ex) {
-			System.out.println("ERROR: " + ex.getMessage());
+			// Try to call selected method (without args)
+			try {
+				System.out.println("Trying generic command: " + lastResult.getClass().getName() + "." + input[0]);
+				Method method = lastResult.getClass().getMethod(input[0]);
+				return method.invoke(lastResult);
+			}
+			catch (Exception ex2) { System.out.println("ERROR: " + ex2.getClass()); }
 			return null;
 		}
+		catch (InvocationTargetException ex) { System.out.println(ex.getCause().getMessage()); }
+		catch (Exception ex) { System.out.println("ERROR: " + ex.getClass()); }
+		return null;
 	}
 }
