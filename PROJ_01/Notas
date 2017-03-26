@@ -1,0 +1,10 @@
+O que foi feito:
+Injeção do codigo no construtor para preencher o valor dos argumentos por reflexão.
+É injetado juntamente na classe um método auxiliar "containsMethod" para verificar se o argumento existe.
+
+
+ToDo
+Verificar argumentos da classe de cima
+Tratamentos de exceções como deve ser
+No método getInitializer(CtField field, String defaultValue) aceitar todas primitivas (só está int) e eventualmente classes
+Lidar com casos de repetição de argumento (neste momento o mais recente é o q fica).

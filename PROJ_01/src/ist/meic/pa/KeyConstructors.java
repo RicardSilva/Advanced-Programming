@@ -1,5 +1,6 @@
 package ist.meic.pa;
 
+
 import javassist.*;
 import java.lang.reflect.*;
 import java.util.HashMap;
@@ -19,6 +20,7 @@ public class KeyConstructors {
 		if (args.length > 0) {
 			className = args[0];
 		} else {
+			System.out.println("Input test:");
 			Scanner scanner = new Scanner(System.in);
 			className = scanner.nextLine().split(" ")[0];
 			scanner.close();
