@@ -1,3 +1,7 @@
+// Tests if:
+// - default values are passed from superclasses
+// - parent fields can be overwritten by child
+
 public class TestB {
 	public static void main(String[] args) {
 		System.err.println(new ExtendedWidget());

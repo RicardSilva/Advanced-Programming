@@ -24,7 +24,7 @@ public class KeyConstructors {
 			scanner.close();
 		}
 		
-		//Set our own translator
+		// Set our own translator
 		KeyConstructors keyC = new KeyConstructors();
 		Translator translator = new KeywordTranslator();
 		ClassPool pool = ClassPool.getDefault();
