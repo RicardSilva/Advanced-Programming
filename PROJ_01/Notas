@@ -2,9 +2,23 @@ O que foi feito:
 Injeção do codigo no construtor para preencher o valor dos argumentos por reflexão.
 É injetado juntamente na classe um método auxiliar "containsMethod" para verificar se o argumento existe.
 
+Ricardo:
+
+#########################################
+## Acho que já passa a todos os testes ##
+#########################################
+Verificar argumentos da classe de cima 
+- Vou buscar todas as keywords de todas as anotações em construtores de superclasses
+
+No método getInitializer(CtField field, String defaultValue) aceitar todas primitivas (só está int) e eventualmente classes
+- Injetei um simples assignment no inicio do construtor quando houver algum valor default. Não estou a ver nenhum problema com esta solução simples. 
+Se não houver nenhum assignment a variável fica logo com o valor default do java...
+
 
 ToDo
-Verificar argumentos da classe de cima
-Tratamentos de exceções como deve ser
-No método getInitializer(CtField field, String defaultValue) aceitar todas primitivas (só está int) e eventualmente classes
+Não consegui por a correr com os comandos que o prof pede no enunciado (ie: java ist.meic.pa.KeyConstructores Test) a partir da raíz (só consigo com o ant run)
+Tratamentos de exceções como deve ser 
+- O que queres mais? No enunciado só fala mesmo da "java.lang.RuntimeException: Unrecognized keyword: foo" que já fizeste
+
 Lidar com casos de repetição de argumento (neste momento o mais recente é o q fica).
+
