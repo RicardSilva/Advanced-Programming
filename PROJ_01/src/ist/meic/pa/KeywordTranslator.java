@@ -74,10 +74,12 @@ public class KeywordTranslator implements Translator {
 		code += "			field.set(this, value);";
 		code += "		} catch (NoSuchFieldException e) {";
 		code += "			current = current.getSuperclass();";
-							//There was an error assigning the value to the field
-		//code += "			throw new IllegalArgumentException(e);";
 		code += "  		}";
 		code += "   }";
+		code += "   if (!fieldFound) {";
+							//There was an error assigning the value to the field
+		code += "			throw new IllegalArgumentException(\"The argument was not defined in the constructor.\");";
+		code += "	}";
 		code += "}";
 		
 		ctConst.insertBeforeBody(code);
@@ -138,21 +140,38 @@ public class KeywordTranslator implements Translator {
 		
 		// For each constructor of the loaded class
 		CtClass ctClass = pool.getCtClass(className);
-		for(CtConstructor ctConst : ctClass.getConstructors()){
-			try {
-	            KeywordArgs annotation = (KeywordArgs) ctConst.getAnnotation(KeywordArgs.class);
-	            // If @KeywordArgs annotation is present modify constructor
-	            if(annotation != null) {
-					InjectContainsKeywordMethod(ctClass);
-					InjectUpdateFieldsCode(ctConst);
-					InjectFieldInitializers(ctConst, annotation);
-	            }
-			}
-            catch (ClassNotFoundException ex) {
-                throw new NotFoundException(className); // Thrown by getAnnotation()
-            }
+		CtClass objectArr = pool.getCtClass(Object[].class.getName());
+		CtClass[] params = {objectArr};
+		KeywordArgs annotation = null;
+		CtConstructor ctConst = null;
+		try {
+			ctConst =  ctClass.getDeclaredConstructor(params);
+			annotation = (KeywordArgs) ctConst.getAnnotation(KeywordArgs.class);
 		}
+		catch (NotFoundException ex)
+		{
+			//The constructor doesn't exist. Nothing else to do
+			return;
+		}
+        catch (ClassNotFoundException ex) {
+        	//The annotation doesn't exist. Nothing else to do.
+        	return;
+        }
+		
+		
+		try {
+			// If @KeywordArgs annotation is present modify constructor 
+			if(annotation != null) {
+				InjectContainsKeywordMethod(ctClass);	
+				InjectUpdateFieldsCode(ctConst);
+				InjectFieldInitializers(ctConst, annotation);
+	        }
+		} catch (ClassNotFoundException e) {
+			//TODO ver de onde vieram estas exceções
+		}
+		
 	}
+	
 	
 	///////////////////////////
 	///// Deprecated Code /////
