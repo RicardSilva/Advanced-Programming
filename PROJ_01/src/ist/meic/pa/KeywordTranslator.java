@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -60,25 +61,23 @@ public class KeywordTranslator implements Translator{
         }
 	}
 	
-	static boolean containsKeyword(String keyword)
-	{
-		return keyword.equals("a") || keyword.equals("b") || false;
-	}
+	
 	
 	static java.util.Set<String> FOO = new HashSet<String>(Arrays.asList("a", "b"));
 	private void modifyConstructor(CtClass ctClass, CtConstructor ctConst, KeywordArgs annotation) 
 			throws IllegalArgumentException {
 		Map<String,String> arguments = getArguments(annotation);
 		//First we set the default initializers 
-		buildDefaultInitializers(ctClass, arguments);
+		//buildDefaultInitializers(ctClass, arguments);
 		
 		//Insert keyword arguments method in the class
-		addKeywordSet(ctClass,arguments);
-		
+		addKeywordSet(ctClass);
+		String defaultValues = buildDefaultInitializers2(arguments);
 		//Now we inject the code to fill the arguments in the constructor
-		String code = codeArgumentsReflection(arguments);
+		String code = codeArgumentsReflection();
 		try {
 			ctConst.insertBeforeBody(code);
+			ctConst.insertBeforeBody(defaultValues);
 		} catch (CannotCompileException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -87,24 +86,61 @@ public class KeywordTranslator implements Translator{
 		
 	}
 
-	
+	private Set<String> getKeywords (KeywordArgs annotation) {
+		Set<String> keywords =  new HashSet<String>();
+		String[] givenArgs = annotation.value().split(",");
+		for(String argumentPair : givenArgs)
+		{
+            String[] pair = argumentPair.split("=");
+            String keword = pair[0].trim();
+			keywords.add(keword);
+		}
+        return keywords;
+		
+	}
 
 	
-	private void addKeywordSet(CtClass ctClass,Map<String,String> arguments ) {
+	private void addKeywordSet(CtClass ctClass) {
+		
+		CtClass currentClass = ctClass;
+		Set<String> keywordSet = new HashSet<String>();
+		while(currentClass != null) {
+			CtConstructor[] constructors = currentClass.getConstructors();
+			for(CtConstructor constructor : constructors){
+				try {
+					Object annotation = constructor.getAnnotation(KeywordArgs.class);
+					if(annotation != null) {
+						keywordSet.addAll(getKeywords((KeywordArgs) annotation));
+					}               
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+			}
+			try{
+				currentClass = currentClass.getSuperclass();
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
 		
 		
 		String list = "";
-		if(arguments.size() > 0)
+		if(keywordSet.size() > 0)
 		{
-			for(String key : arguments.keySet()){
+			for(String key : keywordSet){
 				list += "keyword.equals(\"" + key + "\") || ";
 			}
 			//Add a trailing false to be able to compile
 			list += "false";
 			System.out.println(list);
 		}
-		
-		
+		else {
+			list += "false";
+		}
 		
 		
 		String setCode = "static boolean containsKeyword(String keyword) {";
@@ -119,23 +155,34 @@ public class KeywordTranslator implements Translator{
 		
 		
 	}
+	
 
 	//Code to be injected in the constructor
-	private String codeArgumentsReflection(Map<String,String> arguments) {
+	private String codeArgumentsReflection() {
 		String code = "";
+		
 		code += "for (int i = 0; i < $1.length / 2 ; i++)	{";
 		code += "	String fieldName = (String) $1[2*i];";
 		code += "	if(!containsKeyword(fieldName))";
 		code += "		throw new RuntimeException(\"Unrecognized keyword: \" + fieldName);";	
-		code += "Object value = $1[2*i+1];";
-		code += "	try {";
-		code += "		java.lang.reflect.Field field = this.getClass().getDeclaredField(fieldName);";
-		code += "		field.setAccessible(true);";
-		code += "		field.set(this, value);";
-		code += "	} catch (Throwable e) {";
-						//There was an error assigning the value to the field
-		code += "		throw new IllegalArgumentException(e);";
-		code += "}}";	
+		code += "   Object value = $1[2*i+1];";
+		code += "   boolean fieldFound = false;";
+		code += "   Class current = this.getClass();";
+		code += "   while(current.getSuperclass()!=null && !fieldFound) {";
+		code += "		try {";
+		code += "			java.lang.reflect.Field field = current.getDeclaredField(fieldName);";
+		code += "           fieldFound = true;";
+		code += "			field.setAccessible(true);";
+		code += "			field.set(this, value);";
+		code += "		} catch (NoSuchFieldException e) {";
+		code += "			current = current.getSuperclass();";
+							//There was an error assigning the value to the field
+		//code += "			throw new IllegalArgumentException(e);";
+		code += "  		}";
+		code += "   }";
+		
+		code += "}";
+		
 		return code;
 	}
 
@@ -164,6 +211,15 @@ public class KeywordTranslator implements Translator{
             
         }
 	}
+	private String buildDefaultInitializers2(Map<String,String> arguments) {
+		String code = "";
+		for(String arg : arguments.keySet()){
+			if(arguments.get(arg) != null)
+				code += arg + "=" + arguments.get(arg) + ";";
+            
+        }
+		return code;
+	}
 
 	private Map<String,String> getArguments(KeywordArgs annotation){
         String[] givenArgs = annotation.value().split(",");
@@ -172,7 +228,10 @@ public class KeywordTranslator implements Translator{
 		{
             String[] pair = argumentPair.split("=");
             String argName = pair[0].trim();
-            String defValue = pair[1].trim();
+			String defValue = null;
+			if(pair.length == 2) {
+				defValue = pair[1].trim();
+			}
             arguments.put(argName, defValue);
 		}
         return arguments;

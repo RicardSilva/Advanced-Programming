@@ -1,6 +1,5 @@
 package ist.meic.pa;
 
-
 import javassist.*;
 import java.lang.reflect.*;
 import java.util.HashMap;
@@ -40,6 +39,7 @@ public class KeyConstructors {
 		}
 		catch (Throwable e)
 		{
+			e.printStackTrace();
             System.out.println("Throwable in test class!");
 		}
 		
