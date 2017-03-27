@@ -27,18 +27,13 @@
                 <attribute name="Main-Class" value="ist.meic.pa.KeyConstructors"/>
             </manifest>
         </jar>
-    </target>
+	</target>
 	
 	<target name="run" depends="compile">
-	<!--
-		<java classpath="classes" jar="keyConstructors.jar" fork="true"/>
-		-->
 		<java classpath="classes" classname="ist.meic.pa.KeyConstructors">
 			<classpath>
         		<pathelement path="lib/javassist.jar"/>
     		</classpath>
 		</java>
-		
-		
 	</target>
 </project>
