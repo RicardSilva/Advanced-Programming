@@ -129,12 +129,12 @@ public class KeywordTranslator implements Translator {
 		CtClass ctClass = pool.getCtClass(className);
 		CtConstructor ctConst;
 		
+		// Get constructor
 		try {
 			ctConst =  getSpecialConstructor(ctClass);
 		}
 		catch (NotFoundException ex) {
-			// The constructor doesn't exist. Nothing else to do.
-			return;
+			return; // The constructor doesn't exist
 		}
 			
 		// If @KeywordArgs annotation is present modify constructor

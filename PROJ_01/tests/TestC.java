@@ -1,4 +1,4 @@
-// Test if:
+// Tests if:
 // - An exception is thrown if an argument that does not exist is given
 
 public class TestC {

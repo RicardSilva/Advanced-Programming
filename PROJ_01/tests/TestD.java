@@ -1,4 +1,4 @@
-// Test if:
+// Tests if:
 // - params with no default values are initialized correctly
 
 public class TestD {
