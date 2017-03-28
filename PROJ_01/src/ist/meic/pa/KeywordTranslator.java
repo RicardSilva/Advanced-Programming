@@ -1,3 +1,10 @@
+/*
+KeywordTranslator: Search for KeywordArgs annotations and injects code where needed
+to initialize class fields with their default values and build constructors that accept
+keywords as arguments
+*/
+
+
 package ist.meic.pa;
 
 import javassist.*;
