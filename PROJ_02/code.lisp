@@ -23,7 +23,9 @@
 		(class (make-class (car classlist) fields (cdr classlist))))
 		`(progn
 			(generate-constructor ',class)
+			(generate-recognizer ',class)
 			;generate getters
+			(generate-getters ',class)
 			',class)))
 		
 (defmacro generate-constructor (class)
@@ -34,7 +36,19 @@
 				(lambda(field) `(list ,field ,(new-symbol field)))
 				(get-class-fields (eval class))))))) ;;TODO: get fields from parent class
 
-
+(defmacro generate-recognizer (class)
+	`(defun ,(new-symbol (get-class-name (eval class)) "-p")
+		(object)
+		(string= "HUMAN" (get-object-class object))
+	))
+				
+(defmacro generate-getters (class)
+	(dolist (field (get-class-fields (eval class)))
+		`(defun ,(new-symbol (get-class-name (eval class)) "-" field)
+			(object)
+			
+			)))
+	
 ;;;;;;;;;;;;;;;;;;;;;;; Class-Related Functions ;;;;;;;;;;;;;;;;;;;;;;;
 (setq classpool (make-hash-table :test 'equal))
 
@@ -48,7 +62,7 @@
 (defun get-class-name (class)
 	(car class))
 
-(defun get-class-fields (class)
+(defun get-all-class-fields (class)
 	(cadr class))
 
 (defun get-class-superclasses (class)
@@ -99,13 +113,31 @@
 
 (defun get-class (object)
 	(values (gethash (car object) classpool))) ;keep only first value
+	
+(defun get-object-class (object)
+	(car object))
+
+(defun get-object-fields (object)
+	(cadr object))
+
+(defun get-object-superclasses (object)
+	(caddr object))
 
 ;;;;;;;;;;;;  Auxiliary methods
 (defun to-list (elem)
 	(if (listp elem) elem (list elem)))
 
-(defun new-symbol (str1 &optional str2)
-	(intern (string-upcase (concatenate 'string str1 str2))))
+(defun new-symbol (&rest strings)
+	(intern (string-upcase (string-conc strings))))
+
+; Returns the result of concatenating all strings in a list
+(defun string-conc (strings)
+	(let ((l ""))
+	(dolist (s strings)
+		(setq l (concatenate 'string l s)))
+	l))
+	
+
 	
 ;;;;;;;;;;;;;;;;;;;;; Test Objects ;;;;;;;;;;;;;;;;;;;;;;;;
 (setf human (def-class human bloodtype))

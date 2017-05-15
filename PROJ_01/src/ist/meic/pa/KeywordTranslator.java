@@ -9,6 +9,7 @@ package ist.meic.pa;
 
 import javassist.*;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +29,7 @@ public class KeywordTranslator implements Translator {
 	
 	// Parse @KeywordArgs parameters and default values and return them as a map
 	private Map<String,String> parseKeywordArgs(KeywordArgs annotation) {
-		Map<String,String> keywordParams = new HashMap<String,String>();
+		Map<String,String> keywordParams = new LinkedHashMap<String,String>();
 		
 		for(String paramString : annotation.value().split(",")) {
             String[] pair = paramString.split("=");
