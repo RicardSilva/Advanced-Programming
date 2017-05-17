@@ -33,15 +33,23 @@
 (defmacro generate-recognizer (class)
 	`(defun ,(new-symbol (get-name (eval class)) "?")
 		(object)
-		;(list-contains (get-name object) ',(get-all-classes (eval class)))))
 		(list-contains ,(get-name (eval class)) (get-all-classes (get-class object)))))
-				
+	
+
+	
+		
 (defmacro generate-getters (class)
-	(dolist (field (get-fields (eval class)))
-		`(defun ,(new-symbol (get-name (eval class)) "-" field)
-			(object)
-			
-			)))
+	`(let ((counter 0))
+		(dolist (field (get-fields ,class))
+		
+			(setq symbol (new-symbol ,(get-name (eval class)) "-" field))
+			(defun symbol
+				(object)
+				(nth counter (get-fields object)))
+			(incf counter)
+				)))
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;; Class-Related Functions ;;;;;;;;;;;;;;;;;;;;;;;
