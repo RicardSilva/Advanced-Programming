@@ -33,24 +33,23 @@
 (defmacro generate-recognizer (class)
 	`(defun ,(new-symbol (get-name (eval class)) "?")
 		(object)
-		(list-contains ,(get-name (eval class)) (get-all-classes (get-class object)))))
-	
-
-	
-		
+		(if (listp object) ; check if is a list
+			(let ((class (get-class object)))
+				(if class ; check if first element is the name of a valid class
+					(contains (get-all-classes class) ,(get-name (eval class))))))))
+				
 (defmacro generate-getters (class)
-	`(let ((counter 0))
-		(dolist (field ',(get-fields (eval class)))
-		
-			(setq symbol (new-symbol ,(get-name (eval class)) "-" field))
-			(defun symbol
-				(object)
-				(nth counter (get-fields object)))
-			(incf counter)
-				)))
-
-
-
+	(let ((counter -1))
+		`(progn
+			,@(mapcar
+				#'(lambda (field)
+					(progn
+						(incf counter)
+						`(defun ,(new-symbol (get-name (eval class)) "-" field)
+							(object)
+							(if (,(new-symbol (get-name (eval class)) "?") object)
+								(nth ,counter (get-fields object))))))
+			(get-fields (eval class))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;; Class-Related Functions ;;;;;;;;;;;;;;;;;;;;;;;
 (setq classpool (make-hash-table :test 'equal))
@@ -58,19 +57,18 @@
 (defun make-class (class-name fields superclasses)
 	(let ((class (list
 			(string-upcase class-name)
-
 			(mapcar #'string-upcase fields)	; validate fields?
 			(mapcar #'string-upcase superclasses)))) ; validate superclasses?
 		(setf (gethash (get-name class) classpool) class)))
 			
 
-(defun get-name (class)
+(defun get-name (class) ;works for classes and instances
 	(copy-seq (car class))) ;protected
 
-(defun get-fields (class)
+(defun get-fields (class) ;works for classes and instances
 	(copy-list (cadr class))) ;protected
 
-(defun get-superclasses (class)
+(defun get-superclasses (class) ;works for classes and instancess
 	(copy-list (caddr class))) ;protected
 
 ; Returns a unique list of the given class and its superclasses fields (DFS)
@@ -84,15 +82,14 @@
 
 ; Returns a list of the given class and its superclasses names (DFS)
 (defun get-all-classes (class)
-
 	(let ((superclasses (get-superclasses class)))
 		(if (null superclasses)
 			(to-list (get-name class))
-			(mapcan
-				#'(lambda (superclass-name) (cons
-					(get-name class)
-					(get-all-classes (gethash superclass-name classpool))))
-				superclasses))))
+			(cons (get-name class)
+				(mapcan
+				#'(lambda (superclass-name)
+					(get-all-classes (gethash superclass-name classpool)))
+				superclasses)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;; Instance-Related Functions ;;;;;;;;;;;;;;;;;;;;;;
 
@@ -139,16 +136,19 @@
 
 (defun get-class (object)
 	(values (gethash (car object) classpool))) ;keep only first value
+
+; ; Returns a list of the given class and its superclasses names (DFS)
+; (defun get-all-values (object)
+; 	(let ((superobjects (get-superclasses object))
+; 		(values (get-fields object))) ; leave superobjects out
+; 		(if (null superobjects)
+; 			(to-list values)
+; 			(cons values
+; 				(mapcar
+; 				#'(lambda (superobject)
+; 					(get-all-values superobject))
+; 				superobjects)))))
 	
-(defun get-object-class (object)
-	(car object))
-
-(defun get-object-fields (object)
-	(cadr object))
-
-(defun get-object-superclasses (object)
-	(caddr object))
-
 ;;;;;;;;;;;;  Auxiliary methods
 (defun to-list (elem)
 	(if (listp elem) elem (list elem)))
@@ -156,22 +156,39 @@
 (defun new-symbol (&rest strings)
 	(intern (string-upcase (string-conc strings))))
 	
-(defun list-contains (elem lst)
-	(cond
-		((equal lst '()) nil)
-		((equal (car lst) elem) t)
-		(t (list-contains elem (cdr lst)))))
+(defun contains (lst elem)
+	(not (not (member elem lst :test #'equal)))) ; convert to boolean
 
 ; Returns the result of concatenating all strings in a list
 (defun string-conc (strings)
-	(let ((l ""))
-	(dolist (s strings)
-		(setq l (concatenate 'string l s)))
-	l))
-		
+	(let ((result ""))
+		(dolist (s strings)
+			(setq result (concatenate 'string result s)))
+		result))
+
+;;;;;;;;;;;;;;;;;;;;;;; Search Algorithms ;;;;;;;;;;;;;;;;;;;;;;;
+
+;childNodeFunc - must return a list of child nodes
+
+; (defun DFS (startNode childNodeFunc execFunc)
+; 	(let
+; 		((stack '(startNode))
+; 		(node startNode))
+; 		(loop while (not (null stack)) do
+; 			(progn
+; 				(setf node (car stack))
+; 				(setf stack (cdr stack))
+; 				(setf stack (append stack (apply childNodeFunc (list node)))
+; 				(setf stack (append stack (apply childNodeFunc (list node)))
+; 				(write stack)
+; 				(write-line "")
+; 			))
+; ))))
+
 ;;;;;;;;;;;;;;;;;;;;; Test Objects ;;;;;;;;;;;;;;;;;;;;;;;;
-(setf human (def-class human bloodtype))
-(setf hero (def-class hero power))
+(setf entity (def-class entity)) ; circular inheritance
+(setf human (def-class (human entity) bloodtype))
+(setf hero (def-class (hero entity) power))
 (setf person (def-class (person human hero) name age)) ; multiple inheritance
 (setf student (def-class (student person) course))
 (setf superman (make-hero :power "strength"))
