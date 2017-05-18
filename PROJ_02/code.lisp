@@ -40,7 +40,7 @@
 		
 (defmacro generate-getters (class)
 	`(let ((counter 0))
-		(dolist (field (get-fields ,class))
+		(dolist (field ',(get-fields (eval class)))
 		
 			(setq symbol (new-symbol ,(get-name (eval class)) "-" field))
 			(defun symbol
