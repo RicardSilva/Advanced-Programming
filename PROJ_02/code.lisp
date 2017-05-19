@@ -62,7 +62,8 @@
 						`(defun ,(new-symbol (get-name (eval class)) "-" field "!")
 							(object value)
 							(if (,(new-symbol (get-name (eval class)) "?") object)
-								(set-fields object (set-nth (get-fields object) ,counter value))))))
+								(set-field object ,counter value))
+							object)))
 			(get-fields (eval class))))))
 			
 	  
@@ -83,12 +84,9 @@
 
 (defun get-fields (class) ;works for classes and instances
 	(copy-list (cadr class))) ;protected
-	
-(defun get-fields2 (class) ;works for classes and instances
-	(cadr class))
 
-(defun set-fields (class fields) ;works for classes and instances
-	(set-nth class 1 fields))	
+(defun set-field (class field value) ;works for classes and instances
+	(set-nth (cadr class) field value))	
 	
 (defun get-superclasses (class) ;works for classes and instancess
 	(copy-list (caddr class))) ;protected
