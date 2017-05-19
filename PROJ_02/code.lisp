@@ -34,9 +34,11 @@
 				`(defun ,(new-symbol (get-name (eval class)) "-" field)
 					(object)
 					(if (,(new-symbol (get-name (eval class)) "?") object)
-						(nth
-							,(find-index (get-all-fields (eval class)) field)
-							(get-all-values (get-object-by-name object ,(get-name (eval class))))))))
+						,(if (field-in-class? (eval class) field)
+							`(nth ,(find-index (get-fields (eval class)) field) (get-fields 
+								(get-object-by-name object ,(get-name (eval class)))))
+							(let ((superclass (superclass-with-field (eval class) field)))
+								`(,(new-symbol superclass "-" field) (get-object-by-name object ,superclass)))))))
 			(get-all-fields (eval class)))))
 		
 
@@ -52,6 +54,19 @@
 			(mapcar #'string-upcase superclasses)
 			(mapcar #'(lambda (field) (cadr (to-list field))) fields)))) ; *EXTENSION*
 		(setf (gethash (get-name class) classpool) class)))
+
+(defun field-in-class? (class field)
+	(contains (get-fields class) (string-upcase field)))
+
+(defun superclass-with-field (class field)
+	(let ((getter-name 
+		(lambda (class)
+			(if (field-in-class? class field)
+				(get-name class)
+				NIL))))
+		(car (remove nil 
+			(BFS class #'get-superclasses getter-name)
+			))))
 
 ; Return a *copy* of the name of the given class
 (defun get-name (class)
@@ -116,7 +131,6 @@
 						(dolist (pair valuelist) ; search valuelist and assign value
 							(if (equal field (car pair))
 								(progn
-									(setf valuelist (remove pair valuelist))
 									(return (cadr pair)))))))
 						(if value value default-value))) ; *EXTENSION*
 	)
