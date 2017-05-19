@@ -72,9 +72,12 @@
 			(mapcar #'(lambda (field) (cadr (to-list field))) fields)))) ; *EXTENSION-1*
 		(setf (gethash (get-name class) classpool) class)))
 
+;; Indicates if a class contains a given field.
 (defun field-in-class? (class field)
 	(contains (get-fields class) field))
 
+;; Returns a superclass containing a given field.
+;; The first element of a BFS search is returned.
 (defun superclass-with-field (class field)
 	(let ((getter-name
 		(lambda (class)
