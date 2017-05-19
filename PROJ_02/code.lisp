@@ -48,8 +48,9 @@
 (defun make-class (class-name fields superclasses)
 	(let ((class (list
 			(string-upcase class-name)
-			(mapcar #'string-upcase fields)
-			(mapcar #'string-upcase superclasses))))
+			(mapcar #'(lambda (field) (string-upcase (car (to-list field)))) fields)
+			(mapcar #'string-upcase superclasses)
+			(mapcar #'(lambda (field) (cadr (to-list field))) fields)))) ; *EXTENSION*
 		(setf (gethash (get-name class) classpool) class)))
 
 ; Return a *copy* of the name of the given class
@@ -63,6 +64,10 @@
 ; Return a *copy* of the names of the superclasses of the given class (list)
 (defun get-superclasses-name (class)
 	(copy-list (caddr class)))
+
+; Return a *copy* of the default values of the given class (list) *EXTENSION*
+(defun get-defaul-values (class)
+	(copy-list (cadddr class)))
 
 ; Returns a list of the superclasses of the given class
 (defun get-superclasses (class)
@@ -93,13 +98,16 @@
 			#'(lambda (object)
 				(setf (cadr object)
 					(mapcar ; for each field in its class
-						#'(lambda (field)
-							(dolist (pair valuelist) ; search valuelist and assign value
-								(if (equal field (car pair))
-									(progn
-										(setf valuelist (remove pair valuelist))
-										(return (cadr pair))))))
-						(get-fields (get-class object)))))
+						#'(lambda (field default-value)
+							(let ((value
+								(dolist (pair valuelist) ; search valuelist and assign value
+									(if (equal field (car pair))
+										(progn
+											(setf valuelist (remove pair valuelist))
+											(return (cadr pair)))))))
+								(if value value default-value))) ; *EXTENSION*
+						(get-fields (get-class object))
+						(get-defaul-values (get-class object)))))
 			(get-all-objects newObject))
 		newObject))
 
@@ -173,7 +181,7 @@
 			(if childNodes
 				(setf stack (append stack childNodes)))
 		collect (apply execFunc (append (list node) args)))))
-
+		
 
 ;;;;;;;;;;;;;;;;;;;;; Test Objects ;;;;;;;;;;;;;;;;;;;;;;;;
 ; (setf entity (def-class entity foo)) ; circular inheritance
@@ -185,3 +193,8 @@
 ; (setf carlos (make-human :bloodtype "AB"))
 ; (setf joao (make-person :bloodtype "AB" :age 20 :name "Joao" :power "Flying")) ; field order is irrelevant
 ; (setf maria (make-student :course "Economy" :age 13 :name "Maria" :power "Invisibility")) ; missing fields are set to NIL
+; ; *EXTENSION*
+; (setf animal (def-class animal (legs 4) (state "happy")))
+; (setf dog (def-class (dog animal) owner))
+; (setf bobby (make-dog :owner "Maria"))
+; (setf homeless (make-dog :legs 3 :state "sad"))
