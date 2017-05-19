@@ -42,7 +42,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;; Class-Related Functions ;;;;;;;;;;;;;;;;;;;;;;;
 
-(setf classpool (make-hash-table :test 'equal))
+(defparameter classpool (make-hash-table :test 'equal))
 
 ; Returns a new class and adds it to the ClassPool
 (defun make-class (class-name fields superclasses)
@@ -95,21 +95,31 @@
 (defun make-object (class valuelist)
 	(let ((newObject (make-new-object class))) ; start with an empty class
 		(mapcar ; for each object hierarchy (BFS)
-			#'(lambda (object)
-				(setf (cadr object)
-					(mapcar ; for each field in its class
-						#'(lambda (field default-value)
-							(let ((value
-								(dolist (pair valuelist) ; search valuelist and assign value
-									(if (equal field (car pair))
-										(progn
-											(setf valuelist (remove pair valuelist))
-											(return (cadr pair)))))))
-								(if value value default-value))) ; *EXTENSION*
-						(get-fields (get-class object))
-						(get-defaul-values (get-class object)))))
+			(fill-object-lambda valuelist)
 			(get-all-objects newObject))
 		newObject))
+
+;;Returns a lambda that fills a given object with the values in the list
+(defun fill-object-lambda (valuelist)
+	(lambda (object)
+		(setf (cadr object)
+			(mapcar ; for each field in its class
+				(assign-value-lambda valuelist)
+				(get-fields (get-class object))
+				(get-defaul-values (get-class object))))))
+
+;;Returns a lambda that fills a given field with the values in the list.
+;;Removes the value from the list so that it isn't reused
+(defun assign-value-lambda (valuelist)
+	#'(lambda (field default-value)
+					(let ((value
+						(dolist (pair valuelist) ; search valuelist and assign value
+							(if (equal field (car pair))
+								(progn
+									(setf valuelist (remove pair valuelist))
+									(return (cadr pair)))))))
+						(if value value default-value))) ; *EXTENSION*
+	)
 
 ; Returns an instance of a class without any fields
 (defun make-new-object (class)
@@ -182,19 +192,3 @@
 				(setf stack (append stack childNodes)))
 		collect (apply execFunc (append (list node) args)))))
 		
-
-;;;;;;;;;;;;;;;;;;;;; Test Objects ;;;;;;;;;;;;;;;;;;;;;;;;
-; (setf entity (def-class entity foo)) ; circular inheritance
-; (setf human (def-class (human entity) bloodtype))
-; (setf hero (def-class (hero entity) power))
-; (setf person (def-class (person human hero) name age)) ; multiple inheritance
-; (setf student (def-class (student person) course))
-; (setf superman (make-hero :power "strength"))
-; (setf carlos (make-human :bloodtype "AB"))
-; (setf joao (make-person :bloodtype "AB" :age 20 :name "Joao" :power "Flying")) ; field order is irrelevant
-; (setf maria (make-student :course "Economy" :age 13 :name "Maria" :power "Invisibility")) ; missing fields are set to NIL
-; ; *EXTENSION*
-; (setf animal (def-class animal (legs 4) (state "happy")))
-; (setf dog (def-class (dog animal) owner))
-; (setf bobby (make-dog :owner "Maria"))
-; (setf homeless (make-dog :legs 3 :state "sad"))
