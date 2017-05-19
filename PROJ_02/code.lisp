@@ -20,6 +20,7 @@
 			(generate-constructor ',class)
 			(generate-recognizer ',class)
 			(generate-getters ',class)
+			(generate-setters ',class)
 			',class)))
 		
 (defmacro generate-constructor (class)
@@ -50,6 +51,21 @@
 							(if (,(new-symbol (get-name (eval class)) "?") object)
 								(nth ,counter (get-fields object))))))
 			(get-fields (eval class))))))
+			
+(defmacro generate-setters (class)
+	(let ((counter -1))
+		`(progn
+			,@(mapcar
+				#'(lambda (field)
+					(progn
+						(incf counter)
+						`(defun ,(new-symbol (get-name (eval class)) "-" field "!")
+							(object value)
+							(if (,(new-symbol (get-name (eval class)) "?") object)
+								(set-fields object (set-nth (get-fields object) ,counter value))))))
+			(get-fields (eval class))))))
+			
+	  
 
 ;;;;;;;;;;;;;;;;;;;;;;; Class-Related Functions ;;;;;;;;;;;;;;;;;;;;;;;
 (setq classpool (make-hash-table :test 'equal))
@@ -67,7 +83,13 @@
 
 (defun get-fields (class) ;works for classes and instances
 	(copy-list (cadr class))) ;protected
+	
+(defun get-fields2 (class) ;works for classes and instances
+	(cadr class))
 
+(defun set-fields (class fields) ;works for classes and instances
+	(set-nth class 1 fields))	
+	
 (defun get-superclasses (class) ;works for classes and instancess
 	(copy-list (caddr class))) ;protected
 
@@ -158,6 +180,12 @@
 	
 (defun contains (lst elem)
 	(not (not (member elem lst :test #'equal)))) ; convert to boolean
+
+(defun set-nth (list n val)
+  (if (> n 0)
+      (cons (car list)
+            (set-nth (cdr list) (1- n) val))
+      (rplaca list val)))
 
 ; Returns the result of concatenating all strings in a list
 (defun string-conc (strings)
