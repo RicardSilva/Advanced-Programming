@@ -9,6 +9,7 @@
 			(generate-constructor ',class)
 			(generate-recognizer ',class)
 			(generate-getters ',class)
+			(generate-setters ',class) ; *EXTENSION-2*
 			',class)))
 		
 (defmacro generate-constructor (class)
@@ -35,10 +36,26 @@
 					(object)
 					(if (,(new-symbol (get-name (eval class)) "?") object)
 						,(if (field-in-class? (eval class) field)
-							`(nth ,(find-index (get-fields (eval class)) field) (get-fields 
+							`(nth ,(find-index (get-fields (eval class)) field) (get-fields
 								(get-object-by-name object ,(get-name (eval class)))))
 							(let ((superclass (superclass-with-field (eval class) field)))
 								`(,(new-symbol superclass "-" field) (get-object-by-name object ,superclass)))))))
+			(get-all-fields (eval class)))))
+
+; *EXTENSION-2*
+(defmacro generate-setters (class)
+	`(progn
+		,@(mapcar
+			#'(lambda (field)
+				`(defun ,(new-symbol "set-" (get-name (eval class)) "-" field)
+					(object value)
+					(if (,(new-symbol (get-name (eval class)) "?") object)
+						,(if (field-in-class? (eval class) field)
+							`(setf (nth ,(find-index (get-fields (eval class)) field) (cadr
+								(get-object-by-name object ,(get-name (eval class)))))
+								value)
+							(let ((superclass (superclass-with-field (eval class) field)))
+								`(,(new-symbol "set-" superclass "-" field) (get-object-by-name object ,superclass) value))))))
 			(get-all-fields (eval class)))))
 		
 
@@ -52,19 +69,19 @@
 			(string-upcase class-name)
 			(mapcar #'(lambda (field) (string-upcase (car (to-list field)))) fields)
 			(mapcar #'string-upcase superclasses)
-			(mapcar #'(lambda (field) (cadr (to-list field))) fields)))) ; *EXTENSION*
+			(mapcar #'(lambda (field) (cadr (to-list field))) fields)))) ; *EXTENSION-1*
 		(setf (gethash (get-name class) classpool) class)))
 
 (defun field-in-class? (class field)
-	(contains (get-fields class) (string-upcase field)))
+	(contains (get-fields class) field))
 
 (defun superclass-with-field (class field)
-	(let ((getter-name 
+	(let ((getter-name
 		(lambda (class)
 			(if (field-in-class? class field)
 				(get-name class)
 				NIL))))
-		(car (remove nil 
+		(car (remove nil
 			(BFS class #'get-superclasses getter-name)
 			))))
 
@@ -108,32 +125,29 @@
 ; Creates an instance of a given class and assigns its initial values
 ; based on a list of <field-name, field-value> pairs
 (defun make-object (class valuelist)
-	(let ((newObject (make-new-object class))) ; start with an empty class
-		(mapcar ; for each object hierarchy (BFS)
-			(fill-object-lambda valuelist)
-			(get-all-objects newObject))
-		newObject))
-
-;;Returns a lambda that fills a given object with the values in the list
-(defun fill-object-lambda (valuelist)
-	(lambda (object)
-		(setf (cadr object)
-			(mapcar ; for each field in its class
-				(assign-value-lambda valuelist)
-				(get-fields (get-class object))
-				(get-defaul-values (get-class object))))))
-
-;;Returns a lambda that fills a given field with the values in the list.
-;;Removes the value from the list so that it isn't reused
-(defun assign-value-lambda (valuelist)
-	#'(lambda (field default-value)
-					(let ((value
-						(dolist (pair valuelist) ; search valuelist and assign value
-							(if (equal field (car pair))
-								(progn
-									(return (cadr pair)))))))
-						(if value value default-value))) ; *EXTENSION*
-	)
+	(labels (
+		; Function used to assign the values of each object
+		(assign-values (object)
+			(setf (cadr object)
+				(mapcar #'pick-value
+					(get-fields (get-class object))
+					(get-defaul-values (get-class object))))
+		)
+		; Function used to choose the value for each field and update the valuelist
+		(pick-value (field default-value)
+			(let ((value
+				(dolist (pair valuelist)
+					(if (equal field (car pair))
+						(progn
+							(setf valuelist (remove pair valuelist))
+							(return (cadr pair)))))))
+				(if value value default-value)) ; *EXTENSION*
+		))
+		; Create a new empty class instance and assign its values (BFS)
+		(let ((newObject (make-new-object class)))
+			(mapcar #'assign-values
+				(get-all-objects newObject))
+				newObject)))
 
 ; Returns an instance of a class without any fields
 (defun make-new-object (class)
@@ -206,3 +220,17 @@
 				(setf stack (append stack childNodes)))
 		collect (apply execFunc (append (list node) args)))))
 		
+; (setf entity (def-class entity foo)) ; circular inheritance
+; (setf human (def-class (human entity) bloodtype))
+; (setf hero (def-class (hero entity) power))
+; (setf person (def-class (person human hero) name age)) ; multiple inheritance
+; (setf student (def-class (student person) course))
+; (setf superman (make-hero :power "strength"))
+; (setf carlos (make-human :bloodtype "AB"))
+; (setf joao (make-person :bloodtype "AB" :age 20 :name "Joao" :power "Flying" :foo "BAR")) ; field order is irrelevant
+; (setf maria (make-student :course "Economy" :age 13 :name "Maria" :power "Invisibility")) ; missing fields are set to NIL
+; ; *EXTENSION*
+; (setf animal (def-class animal (legs 4) (state "happy")))
+; (setf dog (def-class (dog animal) owner))
+; (setf bobby (make-dog :owner "Maria"))
+; (setf homeless (make-dog :legs 3 :state "sad"))
